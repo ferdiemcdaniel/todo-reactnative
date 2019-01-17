@@ -12,12 +12,19 @@ export class Todo extends Component{
     constructor(props){
         super(props);
         this.state = {
-           items: [
-               {title: "Learn Redux" , done: false},
-               {title: "Learn native" , done: false}
-           ],
+           items: [],
            text: "" 
         }
+    }
+
+    componentWillMount(){
+        fetch('http://103.104.18.226:5000/items',{
+            headers: {
+                'Accept': 'application/json'
+            }
+        })
+        .then(res => res.json())
+        .then(data => this.setState({items: data}));
     }
 
     handleChange(text){
@@ -28,14 +35,29 @@ export class Todo extends Component{
         if(!this.state.text.length){
             return;
         }
-        const newState = {items: [...this.state.items, {title: this.state.text}], text: ""};
-        this.setState(newState);
+        console.log("there");
+        fetch('http://103.104.18.226:5000/items',{
+            method: 'POST',
+            body: JSON.stringify({
+                title: this.state.text,
+                done: false
+            }),
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            const newState = {items: [data, ...this.state.items], text: ""};
+            this.setState(newState);
+        })
     }
     
     render() {
         return(
             <View style={styles.container}>
-                <Text>My To Do List</Text>
+                <View style={styles.header}><Text style={styles.headerTitle}>My To Do List</Text></View>
                 <TextInput onChangeText={this.handleChange.bind(this)} value={this.state.text} placeholder="to do..."></TextInput>
                 <TouchableOpacity onPress={this.handleSubmit.bind(this)}><Text>Add</Text></TouchableOpacity>
                 <View>
@@ -52,7 +74,20 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-    alignItems: 'center',
+    flexDirection: 'column',
     justifyContent: 'center',
+    alignItems: 'stretch',
   },
+  header:{
+    height: 50,
+    backgroundColor: 'papayawhip',
+    justifyContent: 'center',
+    flexDirection: 'column'
+  },
+  headerTitle: {
+    fontWeight: 'bold',
+    color: 'palevioletred',
+    textAlign: 'center',
+  }
+
 });
