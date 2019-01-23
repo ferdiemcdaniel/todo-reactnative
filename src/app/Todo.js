@@ -6,65 +6,38 @@ import {
     TextInput,
     TouchableOpacity
 } from 'react-native';
+import StatedTodoList from './containers/StatedTodoList';
+import { connect } from 'react-redux';
+import { addTodo } from './actions';
 
 
-export class Todo extends Component{
-    constructor(props){
-        super(props);
-        this.state = {
-           items: [],
-           text: "" 
-        }
+const Todo = ({dispatch}) => {
+    state = {
+        text: ''
     }
 
-    componentWillMount(){
-        fetch('http://103.104.18.226:5000/items',{
-            headers: {
-                'Accept': 'application/json'
-            }
-        })
-        .then(res => res.json())
-        .then(data => this.setState({items: data}));
-    }
 
     handleChange(text){
         this.setState({text});
     }
 
-    handleSubmit(){
+    handleSubmit(e){
+        const text = this.state.text.trim();
         if(!this.state.text.length){
             return;
         }
-        console.log("there");
-        fetch('http://103.104.18.226:5000/items',{
-            method: 'POST',
-            body: JSON.stringify({
-                title: this.state.text,
-                done: false
-            }),
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(res => res.json())
-        .then(data => {
-            const newState = {items: [data, ...this.state.items], text: ""};
-            this.setState(newState);
-        })
+        dispatch(addTodo(text))
+        this.setState({ text: '' });
     }
     
     render() {
+        const { text } = this.state;
         return(
             <View style={styles.container}>
                 <View style={styles.header}><Text style={styles.headerTitle}>My To Do List</Text></View>
-                <TextInput onChangeText={this.handleChange.bind(this)} value={this.state.text} placeholder="to do..."></TextInput>
+                <TextInput onChangeText={this.handleChange.bind(this)} value={text} placeholder="to do..."></TextInput>
                 <TouchableOpacity onPress={this.handleSubmit.bind(this)}><Text>Add</Text></TouchableOpacity>
-                <View>
-                    {this.state.items.map((todo, i) => (
-                        <Text key={i}>{todo.title}</Text>
-                    ))}
-                </View>
+                <StatedTodoList />
             </View>
         )
     }
@@ -89,5 +62,6 @@ const styles = StyleSheet.create({
     color: 'palevioletred',
     textAlign: 'center',
   }
-
 });
+
+export default connect()(Todo);
